@@ -1,113 +1,103 @@
-import React, { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { Button, Container, Form } from 'react-bootstrap'
-import Title from '../components/Title'
 import { register, reset } from '../features/auth/authSlice'
 import Spinner from '../components/Spinner'
 import { useAppSelector, useAppDispatch } from '../app/hooks'
+import { BsPerson, BsEnvelope, BsLockFill } from 'react-icons/bs'
+import './auth.css'
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        password2: "",
+        name: '', email: '', password: '', password2: ''
     })
-
-    const {name, email, password, password2} = formData
+    const { name, email, password, password2 } = formData
 
     const navigate = useNavigate()
     const dispatch = useAppDispatch()
-    
-    const {user, isLoading, isError, isSuccess, message} = useAppSelector(
-        (state) => state.auth)
+
+    const { user, isLoading, isError, isSuccess, message } = useAppSelector(
+        (state) => state.auth
+    )
 
     useEffect(() => {
-        if (isError) {
-            toast.error(message)
-        }
+        if (isError) toast.error(message)
+        if (isSuccess || user) navigate('/')
+        return () => { dispatch(reset()) }
+    }, [user, isError, isSuccess, message, navigate, dispatch])
 
-        if (isSuccess || user) {
-            navigate('/')
-        }
-
-        // dispatch(reset())
-
-    }, [user, isError, isSuccess, message, navigate, dispatch]) 
-    
-    const onChange = (e) => {
-        setFormData((prevState) => ({...prevState, [e.target.name]: e.target.value}))
+    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-
         if (password !== password2) {
-            toast.error("Passwords do not match")
+            toast.error('Passwords do not match')
+            return
         }
-        else {
-            const userData = {
-                name, email, password
-            }
-            dispatch(register(userData));
-        }
+        dispatch(register({ name, email, password }))
     }
 
-    if (isLoading) {
-        return <Spinner />
-    }
+    if (isLoading) return <Spinner />
 
-  return (
-    <Container>
-        <Title title="Register to Create an Account" />
-        <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Name</Form.Label>
-                <Form.Control 
-                    type="text" 
-                    id="name" 
-                    name="name" 
-                    value={name}
-                    onChange={onChange}
-                />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formEmail">
-                <Form.Label>Email</Form.Label>
-                <Form.Control 
-                    type="text" 
-                    id="email" 
-                    name="email" 
-                    value={email}
-                    onChange={onChange}
-                />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formPassword">
-                <Form.Label>Password</Form.Label>
-                <Form.Control 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    value={password}
-                    onChange={onChange}
-                />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formPassword2">
-                <Form.Label>Confirm Password</Form.Label>
-                <Form.Control 
-                    type="password" 
-                    id="Password2" 
-                    name="password2" 
-                    value={password2}
-                    onChange={onChange}
-                />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formSubmitButton">
-                <Button type="submit" className="btn btn-block">Submit</Button>
-            </Form.Group>
-        </Form>
-    </Container>
-  )
+    return (
+        <div className="auth-wrapper">
+            <div className="auth-card">
+                <h2>Create Account</h2>
+                <form onSubmit={handleSubmit}>
+                    <div className="auth-input-group">
+                        <BsPerson className="auth-icon" />
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Enter your name"
+                            value={name}
+                            onChange={onChange}
+                            required
+                        />
+                    </div>
+                    <div className="auth-input-group">
+                        <BsEnvelope className="auth-icon" />
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={onChange}
+                            required
+                        />
+                    </div>
+                    <div className="auth-input-group">
+                        <BsLockFill className="auth-icon" />
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Create a password"
+                            value={password}
+                            onChange={onChange}
+                            required
+                        />
+                    </div>
+                    <div className="auth-input-group">
+                        <BsLockFill className="auth-icon" />
+                        <input
+                            type="password"
+                            name="password2"
+                            placeholder="Confirm your password"
+                            value={password2}
+                            onChange={onChange}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="auth-submit-btn">Register</button>
+                </form>
+                <p className="auth-link">
+                    Already have an account? <a href="/login">Login here</a>
+                </p>
+            </div>
+        </div>
+    )
 }
 
 export default Register
