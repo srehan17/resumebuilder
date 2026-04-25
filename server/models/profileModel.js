@@ -1,30 +1,30 @@
 const mongoose = require('mongoose')
 
 const profileSchema = mongoose.Schema({
-        firstName: {
-            type: String,
-            required: [true, 'Please add your first name']
-        },
-        lastName: {
-            type: String,
-            required: [true, 'Please add your last name']
-        },
-        location: {
-            type: String,
-            required: [true, 'Please add your location']
-        },
-        email: {
-            type: email,
-            required: [true, 'Please add an email']
-        },
-        phone: {
-            type: String,
-            required: [true, 'Please add a phone number']
-        }
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
     },
-    {
-        timestamps: true
+    name: {
+        type: String,
+        required: [true, 'Please add your name']
+    },
+    phone: {
+        type: String,
+        required: [true, 'Please add a phone number']
+    },
+    email: {
+        type: String,
+    },
+    location: {
+        type: String,
+    },
+    linkedIn: {
+        type: String,
     }
-)
+}, {
+    timestamps: true
+})
 
-module.exports = mongoose.model('Experience', experienceSchema)
+module.exports = mongoose.model('Profile', profileSchema)
