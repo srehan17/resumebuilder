@@ -1,15 +1,11 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import educationService from './educationService'
 
-const education = JSON.parse(localStorage.getItem('education')!)
-// Added exclamation point / bang (!) directly after the parameter to JSON.parse(). 
-// It tells the TypeScript compiler not to worry because the parameter will never be null which removes the TypeScript error.
-
 type Education = {
-    _id?: string,
-    institution: string,
-    qualification: string,
-    gpa?: string,
+    _id?: string
+    institution: string
+    qualification: string
+    gpa?: string
     startYear: string
     endYear?: string
 }
@@ -28,63 +24,76 @@ const initialState: InitialState = {
     isSuccess: false,
     isLoadingEducation: false,
     messageEducation: ''
-} 
+}
 
-// create new education
-export const createEducation = createAsyncThunk('education/create', 
-  async (education: Education, thunkAPI : any) => {
-    try {
-        const token = thunkAPI.getState().auth.user.token
-        return await educationService.createEducation(education, token)
-    } catch(err) {
-        const messageEducation = (err.response && err.response.data && err.response.data.messageEducation) || err.messageEducation || err.toString()
-        return thunkAPI.rejectWithValue(messageEducation)
+const extractMessage = (err: unknown): string => {
+    if (err && typeof err === 'object' && 'response' in err) {
+        const e = err as { response?: { data?: { messageEducation?: string } }; message?: string }
+        return e.response?.data?.messageEducation ?? e.message ?? String(err)
     }
-})
+    return String(err)
+}
 
-// get user education
-export const getEducation = createAsyncThunk('education/getAll', 
-  async (_, thunkAPI : any) => {
-    try {
-        const token = thunkAPI.getState().auth.user.token
-        return await educationService.getEducation(token)
-    } catch(err) {
-        const messageEducation = (err.response && err.response.data && err.response.data.messageEducation) || err.messageEducation || err.toString()
-        return thunkAPI.rejectWithValue(messageEducation)
+export const createEducation = createAsyncThunk(
+    'education/create',
+    async (education: Education, thunkAPI: any) => {
+        try {
+            const token = thunkAPI.getState().auth.user.token
+            return await educationService.createEducation(education, token)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
     }
-}) 
+)
 
-// Delete user education
+export const getEducation = createAsyncThunk(
+    'education/getAll',
+    async (_: void, thunkAPI: any) => {
+        try {
+            const token = thunkAPI.getState().auth.user.token
+            return await educationService.getEducation(token)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
+    }
+)
+
+export const updateEducation = createAsyncThunk(
+    'education/update',
+    async ({ id, data }: { id: string; data: Omit<Education, '_id'> }, thunkAPI: any) => {
+        try {
+            const token = thunkAPI.getState().auth.user.token
+            return await educationService.updateEducation(id, data, token)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
+    }
+)
+
 export const deleteEducation = createAsyncThunk(
-    'goals/delete',
-    async (id, thunkAPI: any) => {
-      try {
-        const token = thunkAPI.getState().auth.user.token
-        return await educationService.deleteEducation(id, token)
-      } catch (error) {
-        const messageEducation =
-          (error.response &&
-            error.response.data &&
-            error.response.data.messageEducation) ||
-          error.messageEducation ||
-          error.toString()
-        return thunkAPI.rejectWithValue(messageEducation)
-      }
+    'education/delete',
+    async (id: string, thunkAPI: any) => {
+        try {
+            const token = thunkAPI.getState().auth.user.token
+            return await educationService.deleteEducation(id, token)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
     }
-  )
-  
+)
+
 export const educationSlice = createSlice({
     name: 'education',
     initialState,
     reducers: {
-        reset: (state) => initialState
+        reset: () => initialState
     },
     extraReducers: (builder) => {
         builder
             .addCase(createEducation.pending, (state) => {
                 state.isLoadingEducation = true
             })
-            .addCase(createEducation.fulfilled, (state, action) => {
+            .addCase(createEducation.fulfilled, (state, action: PayloadAction<Education>) => {
                 state.isLoadingEducation = false
                 state.isSuccess = true
                 state.education = state.education.concat(action.payload)
@@ -97,7 +106,7 @@ export const educationSlice = createSlice({
             .addCase(getEducation.pending, (state) => {
                 state.isLoadingEducation = true
             })
-            .addCase(getEducation.fulfilled, (state, action) => {
+            .addCase(getEducation.fulfilled, (state, action: PayloadAction<Education[]>) => {
                 state.isLoadingEducation = false
                 state.isSuccess = true
                 state.education = action.payload
@@ -107,21 +116,26 @@ export const educationSlice = createSlice({
                 state.isErrorEducation = true
                 state.messageEducation = action.payload as string
             })
+            .addCase(updateEducation.fulfilled, (state, action: PayloadAction<Education>) => {
+                state.education = state.education.map((item) =>
+                    item._id === action.payload._id ? action.payload : item
+                )
+            })
             .addCase(deleteEducation.pending, (state) => {
                 state.isLoadingEducation = true
-              })
-              .addCase(deleteEducation.fulfilled, (state, action) => {
+            })
+            .addCase(deleteEducation.fulfilled, (state, action: PayloadAction<{ id: string }>) => {
                 state.isLoadingEducation = false
                 state.isSuccess = true
                 state.education = state.education.filter(
-                  (item) => item._id !== action.payload.id
+                    (item) => item._id !== action.payload.id
                 )
-              })
-              .addCase(deleteEducation.rejected, (state, action) => {
+            })
+            .addCase(deleteEducation.rejected, (state, action) => {
                 state.isLoadingEducation = false
                 state.isErrorEducation = true
                 state.messageEducation = action.payload as string
-              })
+            })
     }
 })
 

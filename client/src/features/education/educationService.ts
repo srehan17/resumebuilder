@@ -2,55 +2,28 @@ import axios from 'axios'
 
 const API_URL = '/api/education/'
 
-// Create new education
-const createEducation = async (educationData, token) => {
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }
+const config = (token: string) => ({
+    headers: { Authorization: `Bearer ${token}` }
+})
 
-    const response = await axios.post(API_URL, educationData, config)
-
+const createEducation = async (educationData: object, token: string) => {
+    const response = await axios.post(API_URL, educationData, config(token))
     return response.data
 }
 
-// Get user education data
-const getEducation = async (token) => {
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    }
-
-    const response = await axios.get(API_URL, config)
-
+const getEducation = async (token: string) => {
+    const response = await axios.get(API_URL, config(token))
     return response.data
 }
 
-// Delete education
-const deleteEducation = async (educationId, token) => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  
-    const response = await axios.delete(API_URL + educationId, config)
-  
+const updateEducation = async (educationId: string, educationData: object, token: string) => {
+    const response = await axios.put(API_URL + educationId, educationData, config(token))
     return response.data
-  }
-  
-
-const educationService = {
-    createEducation,
-    getEducation,
-    deleteEducation
 }
 
-export default {
-    educationService,
-    createEducation,
-    getEducation,
-    deleteEducation
+const deleteEducation = async (educationId: string, token: string) => {
+    const response = await axios.delete(API_URL + educationId, config(token))
+    return response.data
 }
+
+export default { createEducation, getEducation, updateEducation, deleteEducation }

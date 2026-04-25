@@ -1,53 +1,64 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import authService from './authService'
 
-const user = JSON.parse(localStorage.getItem('user')!)
-// Added exclamation point / bang (!) directly after the parameter to JSON.parse(). 
-// It tells the TypeScript compiler not to worry because the parameter will never be null which removes the TypeScript error.
+export type User = {
+    _id: string
+    name: string
+    email: string
+    token: string
+}
 
-const initialState = {
-    user: user ? user : null,
+type UserRegister = { name: string; email: string; password: string }
+type UserLogin = { email: string; password: string }
+
+interface InitialState {
+    user: User | null
+    isError: boolean
+    isSuccess: boolean
+    isLoading: boolean
+    message: string
+}
+
+const user: User | null = JSON.parse(localStorage.getItem('user')!)
+
+const initialState: InitialState = {
+    user: user ?? null,
     isError: false,
     isSuccess: false,
     isLoading: false,
     message: ''
-} 
-
-type UserRegister = {
-    name : string,
-    email : string, 
-    password : string,
 }
 
-type UserLogin = {
-    email : string, 
-    password : string
+const extractMessage = (err: unknown): string => {
+    if (err && typeof err === 'object' && 'response' in err) {
+        const e = err as { response?: { data?: { message?: string } }; message?: string }
+        return e.response?.data?.message ?? e.message ?? String(err)
+    }
+    return String(err)
 }
 
-// Register user
-export const register = createAsyncThunk('auth/register', 
+export const register = createAsyncThunk('auth/register',
     async (user: UserRegister, thunkAPI) => {
-    try {
-        return await authService.register(user)
-    } catch(err) {
-        const message = (err.response && err.response.data && err.response.data.message) || err.message || err.toString()
-        return thunkAPI.rejectWithValue(message)
+        try {
+            return await authService.register(user)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
     }
-})
+)
 
-// Login user
-export const login = createAsyncThunk('auth/login', 
+export const login = createAsyncThunk('auth/login',
     async (user: UserLogin, thunkAPI) => {
-    try {
-        return await authService.login(user)
-    } catch(err) {
-        const message = (err.response && err.response.data && err.response.data.message) || err.message || err.toString()
-        return thunkAPI.rejectWithValue(message)
+        try {
+            return await authService.login(user)
+        } catch (err) {
+            return thunkAPI.rejectWithValue(extractMessage(err))
+        }
     }
-})
+)
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-    await authService.logout()
+    authService.logout()
 })
 
 export const authSlice = createSlice({
@@ -66,7 +77,7 @@ export const authSlice = createSlice({
             .addCase(register.pending, (state) => {
                 state.isLoading = true
             })
-            .addCase(register.fulfilled, (state, action) => {
+            .addCase(register.fulfilled, (state, action: PayloadAction<User>) => {
                 state.isLoading = false
                 state.isSuccess = true
                 state.user = action.payload
@@ -80,7 +91,7 @@ export const authSlice = createSlice({
             .addCase(login.pending, (state) => {
                 state.isLoading = true
             })
-            .addCase(login.fulfilled, (state, action) => {
+            .addCase(login.fulfilled, (state, action: PayloadAction<User>) => {
                 state.isLoading = false
                 state.isSuccess = true
                 state.user = action.payload
