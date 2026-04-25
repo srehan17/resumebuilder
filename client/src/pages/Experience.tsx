@@ -1,151 +1,145 @@
-import React, { useEffect, useState } from 'react'
-import { Form, Button, Container } from 'react-bootstrap'
-import { DatePicker } from 'react-date-picker'
-import 'react-date-picker/dist/DatePicker.css'
-import 'react-calendar/dist/Calendar.css'
+import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
+import { Form, Button, Container, Row, Col, Table } from 'react-bootstrap'
 import Title from '../components/Title'
 import { useAppSelector, useAppDispatch } from '../app/hooks'
-import { createExperience, getExperience, reset } from '../features/experience/experienceSlice'
-import { useNavigate } from 'react-router-dom'
+import { createExperience, getExperience, updateExperience, deleteExperience } from '../features/experience/experienceSlice'
+import { useNavigate, useLocation } from 'react-router-dom'
+
+type ExperienceForm = {
+    _id?: string
+    company: string
+    position: string
+    responsibilities: string
+    startYear: string
+    endYear: string
+}
+
+const emptyForm: ExperienceForm = { company: '', position: '', responsibilities: '', startYear: '', endYear: '' }
 
 const Experience = () => {
+    const [formData, setFormData] = useState(emptyForm)
+    const [isCurrentJob, setIsCurrentJob] = useState(false)
+    const [editItem, setEditItem] = useState<ExperienceForm | null>(null)
+    const { company, position, responsibilities, startYear, endYear } = formData
 
-    const initialState = {
-        company: "",
-        position: "",
-        responsibilities: "",
-        startYear: "",
-        endYear: ""
-    }
-
-    const [formData, setFormData] = useState(initialState)
-
-    // const [startDate, setStartDate] = useState<Date | null>(null)
-    // const [endDate, setEndDate] = useState<Date | null>(null)
-    // const [startDate, setStartDate] = useState<Date>(new Date())
-    // const [endDate, setEndDate] = useState<Date>(new Date())
-    
-    const {company, position, responsibilities, startYear, endYear} = formData
-
-    const navigate = useNavigate()
     const dispatch = useAppDispatch()
+    const navigate = useNavigate()
+    const location = useLocation()
+    const { experience } = useAppSelector((state) => state.experience)
 
-    const [isChecked, setIsChecked] = useState(false)
-    
-    const checkHandler = () => {
-        setIsChecked(!isChecked)
-    }
+    useEffect(() => {
+        dispatch(getExperience())
+    }, [dispatch])
 
-    const { user } = useAppSelector((state) => state.auth)
-    const {experience, isLoading, isError, isSuccess, message} = useAppSelector(
-        (state) => state.experience)
-    
-    const onChange = (e) => {
-        setFormData((prevState) => ({...prevState, [e.target.name]: e.target.value}))
-    }
-
-    // useEffect(() => {
-    //     if (isError) {
-    //       console.log(message)
-    //     }
-
-    //     // if (!user) {
-    //     //     navigate('/login')
-    //     // }
-
-    //     dispatch(getExperience())
-    //   }, [
-    //     user, navigate, isError, message, dispatch])
-
-    let handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const experienceData = {
-            company, position, responsibilities, startYear, endYear
+    useEffect(() => {
+        if (location.state?.editItem) {
+            openEdit(location.state.editItem)
         }
-        
-        dispatch(createExperience(experienceData))
-        navigate('/')
+    }, [location.state])
 
-        // reset form data fields when form is submitted
-        setFormData(initialState)
-      };
+    const openEdit = (item: ExperienceForm) => {
+        setEditItem(item)
+        setFormData({ company: item.company, position: item.position, responsibilities: item.responsibilities ?? '', startYear: item.startYear, endYear: item.endYear ?? '' })
+        setIsCurrentJob(!item.endYear)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    const cancelEdit = () => {
+        setEditItem(null)
+        setFormData(emptyForm)
+        setIsCurrentJob(false)
+    }
+
+    const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    }
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        if (!isCurrentJob && endYear && parseInt(startYear) > parseInt(endYear)) {
+            toast.error('Start year cannot be greater than end year')
+            return
+        }
+        const data = { ...formData, endYear: isCurrentJob ? '' : endYear }
+        if (editItem?._id) {
+            await dispatch(updateExperience({ id: editItem._id, data }))
+        } else {
+            await dispatch(createExperience(data))
+        }
+        setFormData(emptyForm)
+        setEditItem(null)
+        setIsCurrentJob(false)
+        navigate('/')
+    }
 
     return (
         <Container>
-            <Title title="Experience" />
+            <Row className="justify-content-center">
+            <Col xs={12} md={8} lg={6}>
+            <Title title={editItem ? 'Edit Experience' : 'Add Experience'} />
             <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formCompany">
-                    <Form.Label>Company</Form.Label>
-                    <Form.Control 
-                        type="text" 
-                        value={company} 
-                        name= "company"
-                        onChange={onChange}
-                    />
+                <Form.Group controlId="formCompany" className="mb-3 d-flex align-items-center">
+                    <Form.Label className="mb-0 me-3" style={{ width: 130, minWidth: 130 }}>Company <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="text" name="company" value={company} onChange={onChange} required />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formPosition">
-                    <Form.Label>Position</Form.Label>
-                    <Form.Control 
-                        type="text" 
-                        value={position} 
-                        name="position"
-                        onChange={onChange}
-                    />
+                <Form.Group controlId="formPosition" className="mb-3 d-flex align-items-center">
+                    <Form.Label className="mb-0 me-3" style={{ width: 130, minWidth: 130 }}>Position <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="text" name="position" value={position} onChange={onChange} required />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formResponsibilities">
-                    <Form.Label>Responsibilities</Form.Label>
-                    <Form.Control 
-                        type="text" 
-                        as="textarea" 
-                        rows={3} 
-                        name="responsibilities"
-                        value={responsibilities} 
-                        onChange={onChange}
-                    />
+                <Form.Group controlId="formResponsibilities" className="mb-3 d-flex align-items-start">
+                    <Form.Label className="mb-0 me-3 pt-2" style={{ width: 130, minWidth: 130 }}>Responsibilities</Form.Label>
+                    <Form.Control as="textarea" rows={3} name="responsibilities" value={responsibilities} onChange={onChange} />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formStartYear">
-                    <Form.Label>Start Year</Form.Label>
-                    <Form.Control 
-                        type="text" 
-                        value={startYear} 
-                        name="startYear"
-                        onChange={onChange}
-                    />
-                    {/* <DatePicker className="mx-3"
-                        value={startDate}
-                        onChange={(v) => setStartDate(v as Date)} 
-                    /> */}
+                <Form.Group className="mb-3 d-flex align-items-center">
+                    <Form.Label className="mb-0 me-3" style={{ width: 130, minWidth: 130 }}>Years <span className="text-danger">*</span></Form.Label>
+                    <Form.Control type="text" name="startYear" placeholder="Start" value={startYear} onChange={onChange} className="me-2" required />
+                    <Form.Control type="text" name="endYear" placeholder="End" value={endYear} onChange={onChange} disabled={isCurrentJob} required={!isCurrentJob} />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="formEndYear">
-                    <Form.Label>End Year</Form.Label>
-                    <Form.Control 
-                        type="text" 
-                        value={endYear} 
-                        name="endYear"
-                        onChange={onChange}
-                        disabled={isChecked}
-                    />
-                    {/* <DatePicker className="mx-3"                    
-                        value={endDate}
-                        onChange={(v) => setEndDate(v as Date)} 
-                        disabled={isChecked}
-                    /> */}
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                    <Form.Check 
-                        type="checkbox" 
-                        label="Current Job" 
-                        data-toggle="toggle"
-                        checked={isChecked}
-                        onChange={checkHandler}
-                        />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                    Add
-                </Button>
+                <div className="mb-3 d-flex align-items-center">
+                    <div style={{ width: 130, minWidth: 130 }} />
+                    <Form.Check type="checkbox" label="Current Job" checked={isCurrentJob} onChange={() => setIsCurrentJob(!isCurrentJob)} className="ms-3" />
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                    <div style={{ width: 146, minWidth: 146 }} />
+                    <Button variant="primary" type="submit" className="flex-grow-1"
+                        disabled={!company || !position || !startYear || (!isCurrentJob && !endYear)}>
+                        {editItem ? 'Update' : 'Add'}
+                    </Button>
+                    {editItem && <Button variant="secondary" type="button" onClick={cancelEdit}>Cancel</Button>}
+                </div>
             </Form>
-        </Container >
+
+            {experience.length > 0 && (
+                <>
+                    <h5 className="mt-5">Added Experience</h5>
+                    <Table striped size="sm" className="mt-2">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Position</th>
+                                <th>Years</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {experience.map((item) => (
+                                <tr key={item._id}>
+                                    <td>{item.company}</td>
+                                    <td>{item.position}</td>
+                                    <td>{item.startYear}{item.endYear ? ` – ${item.endYear}` : ' – Present'}</td>
+                                    <td><Button variant="outline-primary" size="sm" onClick={() => openEdit(item as ExperienceForm)}>Edit</Button></td>
+                                    <td><Button variant="danger" size="sm" onClick={() => dispatch(deleteExperience(item._id!))}>Delete</Button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </>
+            )}
+            </Col>
+            </Row>
+        </Container>
     )
 }
 
