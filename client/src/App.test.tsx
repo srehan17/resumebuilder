@@ -1,11 +1,22 @@
 import { render, screen } from '@testing-library/react'
+import { Provider } from 'react-redux'
+import store from './app/store'
 import App from './App'
-import React from 'react'
-import '@types/jest'
 import '@testing-library/jest-dom'
 
-test('renders learn react link', () => {
-  render(<App />)
-  const linkElement = screen.getByText(/learn react/i)
-  expect(linkElement).toBeInTheDocument()
+test('renders the app without crashing', () => {
+    render(
+        <Provider store={store}>
+            <App />
+        </Provider>
+    )
+})
+
+test('renders the navigation header', () => {
+    render(
+        <Provider store={store}>
+            <App />
+        </Provider>
+    )
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
 })

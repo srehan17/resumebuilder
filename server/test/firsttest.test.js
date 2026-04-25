@@ -1,18 +1,14 @@
-const expect    = require("chai").expect
+const { expect } = require('chai')
 const request = require('supertest')
-let app = require('../server').app
-let server = require('../server').server
+const app = require('../app')
+const { connect, disconnect } = require('./testHelper')
 
-describe('GET /', function() {
+describe('App', () => {
+    before(async () => await connect())
+    after(async () => await disconnect())
 
-    after(function (done) {
-        server.close()
-        done()
+    it('returns 404 for unknown routes', async () => {
+        const res = await request(app).get('/nonexistent')
+        expect(res.status).to.equal(404)
     })
-
-    it('Get home route', (done) => {
-        request(app)
-            .get('/')
-            .expect(200, done)
-        })
 })

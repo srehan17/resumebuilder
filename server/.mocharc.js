@@ -1,0 +1,6 @@
+module.exports = {
+    spec: 'test/*.test.js',
+    require: './test/setup.js',
+    timeout: 15000,
+    exit: true,
+}
