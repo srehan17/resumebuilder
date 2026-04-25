@@ -127,3 +127,24 @@ All protected routes require `Authorization: Bearer <token>` header.
 | GET | `/api/profile` | Protected | Get profile |
 | POST | `/api/profile` | Protected | Create or update profile |
 | DELETE | `/api/profile` | Protected | Delete profile |
+
+## Screenshots
+
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 53 33 PM" src="https://github.com/user-attachments/assets/9c6a4e52-c23f-4e6b-83b5-0fe46a2bfada" />
+<br>
+<br>
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 53 04 PM" src="https://github.com/user-attachments/assets/e5c6a634-c02b-4761-82ed-c34d59fea90b" />
+<br>
+<br>
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 54 37 PM" src="https://github.com/user-attachments/assets/28440550-4231-458f-82dc-6010f987d804" />
+<br>
+<br>
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 54 30 PM" src="https://github.com/user-attachments/assets/cf9cb019-b145-46b8-b692-33a64a4f4f26" />
+<br>
+<br>
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 54 17 PM" src="https://github.com/user-attachments/assets/542f7c98-9524-4068-8af2-7f432e841923" />
+<br>
+<br>
+<img width="1322" height="711" alt="Screenshot 2026-04-24 at 10 54 06 PM" src="https://github.com/user-attachments/assets/c61af063-2222-4ace-bd42-5bb9ffe617dc" />
+
+
