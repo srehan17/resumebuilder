@@ -6,6 +6,10 @@ const port = process.env.PORT || 5001
 
 connectDB()
 
+app.get("/", (req, res) => {
+  res.send("Resume Builder API is running");
+});
+
 const server = app.listen(port, () => console.log(`App listening on Port ${port}`))
 
 module.exports = { server, app }
